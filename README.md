@@ -94,38 +94,62 @@ http-server .
 
 ## 🔧 Configuration
 
-### API Configuration
+## API Configuration
 
-The application uses **TheSportsDB API** by default (free, no API key required). For enhanced features, you can configure additional APIs:
+This project uses the **Football-Data.org API** which provides reliable, up-to-date football match data.
 
-#### TheSportsDB API (Default)
-- **Free**: ✅ No API key required
-- **Rate Limit**: 200 requests per day
-- **Coverage**: Major football leagues worldwide
-- **Documentation**: [TheSportsDB API Docs](https://www.thesportsdb.com/api.php)
+### API Details
+- **Provider**: Football-Data.org
+- **Website**: https://www.football-data.org/
+- **Documentation**: https://www.football-data.org/documentation/quickstart
+- **Rate Limit**: 10 requests per minute (free tier)
+- **Cost**: Free tier available
+- **API Key**: ✅ **Already configured** (c5fd509e320048a8b6ac36e4450b3417)
 
-```javascript
-// No configuration needed - works out of the box!
-```
+### API Endpoints Used
+- **Today's Matches**: `/v4/matches?dateFrom={date}&dateTo={date}`
+- **Competitions**: `/v4/competitions`
+- **Teams**: `/v4/teams/{id}`
 
-#### Football-data.org API (Optional Enhancement)
-- **Free Tier**: 10 requests per minute
-- **Paid Tiers**: Higher limits and more features
-- **Coverage**: Premium leagues with detailed statistics
-- **Documentation**: [Football-data.org API](https://www.football-data.org/documentation)
+### Features
+- ✅ **Live Data**: Real-time match information
+- ✅ **Current Matches**: Today's fixtures and results
+- ✅ **Multiple Leagues**: Premier League, La Liga, Bundesliga, Serie A, and more
+- ✅ **Team Information**: Logos, names, and detailed data
+- ✅ **Match Status**: Live, scheduled, finished status tracking
+- ✅ **Rate Limiting**: Built-in rate limiting to respect API limits
 
-To enable Football-data.org API:
+### Data Coverage
+The API provides data for major European leagues including:
+- 🏴󠁧󠁢󠁥󠁮󠁧󠁿 Premier League (England)
+- 🇪🇸 La Liga (Spain)  
+- 🇩🇪 Bundesliga (Germany)
+- 🇮🇹 Serie A (Italy)
+- 🇫🇷 Ligue 1 (France)
+- 🇳🇱 Eredivisie (Netherlands)
+- 🇵🇹 Primeira Liga (Portugal)
+- 🏆 UEFA Champions League
+- 🏆 UEFA Europa League
+- And many more...
 
-1. Get your free API key from [football-data.org](https://www.football-data.org/client/register)
+### Alternative APIs (Fallback Support)
+The application includes fallback support for:
 
-2. Update the API key in `script.js`:
-   ```javascript
-   // Find this line in script.js (around line 43)
-   'X-Auth-Token': 'YOUR_API_KEY_HERE' 
-   
-   // Replace with your actual API key
-   'X-Auth-Token': 'your-actual-api-key-here'
-   ```
+1. **API-Sports (RapidAPI)**
+   - Free tier: 100 requests per day
+   - Backup for when primary API is unavailable
+   - To enable: Add your RapidAPI key in `script.js`
+
+2. **Custom API Integration**
+   - Modify the `CONFIG` object in `script.js`
+   - Update data transformation functions
+   - Test with the new API format
+
+### API Key Management
+The API key is securely integrated into the application. For production deployment:
+1. Consider using environment variables
+2. Implement server-side proxy for enhanced security
+3. Monitor API usage to stay within rate limits
 
 ### Environment Variables (Optional)
 
