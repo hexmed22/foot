@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- Meta Tags for SEO and Responsive Design -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="Live Football Results - Get today's football matches, live scores, and real-time updates from leagues around the world">
+    <meta name="keywords" content="football, soccer, live scores, matches, today, results, sports">
+    <meta name="author" content="Football Results Website">
+    <meta name="robots" content="index, follow">
+    
+    <!-- Open Graph Meta Tags for Social Media -->
+    <meta property="og:title" content="Live Football Results - Today's Matches">
+    <meta property="og:description" content="Stay updated with today's football matches and live scores from leagues worldwide">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="">
+    <meta property="og:image" content="">
+    
+    <!-- Twitter Card Meta Tags -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Live Football Results - Today's Matches">
+    <meta name="twitter:description" content="Stay updated with today's football matches and live scores from leagues worldwide">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHZpZXdCb3g9IjAgMCAzMiAzMiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMTYiIGN5PSIxNiIgcj0iMTQiIGZpbGw9IiMyMjIiIHN0cm9rZT0iIzMzMyIgc3Ryb2tlLXdpZHRoPSIyIi8+CjxwYXRoIGQ9Ik0xNiA4QzEyIDggOSAxMSA5IDE2UzEyIDI0IDE2IDI0UzIzIDIxIDIzIDE2UzIwIDggMTYgOFoiIHN0cm9rZT0iIzY2NiIgc3Ryb2tlLXdpZHRoPSIxLjUiIGZpbGw9Im5vbmUiLz4KPGNpcmNsZSBjeD0iMTYiIGN5PSIxNiIgcj0iMiIgZmlsbD0iIzY2NiIvPgo8L3N2Zz4K">
+    
+    <!-- Page Title -->
+    <title>Live Football Results - Today's Matches</title>
+    
+    <!-- Preload Critical Resources -->
+    <link rel="preload" href="style.css" as="style">
+    <link rel="preload" href="script.js" as="script">
+    
+    <!-- Stylesheet -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Skip to Content Link for Accessibility -->
+    <a href="#main-content" class="skip-link" aria-label="Skip to main content">Skip to main content</a>
+    
+    <!-- Header Section with Navigation -->
+    <header class="header" role="banner">
+        <nav class="navbar" role="navigation" aria-label="Main navigation">
+            <!-- Logo and Site Title -->
+            <div class="navbar-brand">
+                <div class="logo" aria-hidden="true">⚽</div>
+                <h1 class="site-title">Football Results</h1>
+            </div>
+            
+            <!-- Navigation Controls -->
+            <div class="navbar-controls">
+                <!-- Theme Toggle Button -->
+                <button 
+                    id="theme-toggle" 
+                    class="btn btn-icon theme-toggle" 
+                    aria-label="Toggle between dark and light theme"
+                    title="Toggle Theme"
+                >
+                    <span class="theme-icon dark-icon" aria-hidden="true">🌙</span>
+                    <span class="theme-icon light-icon" aria-hidden="true">☀️</span>
+                </button>
+                
+                <!-- Refresh Button -->
+                <button 
+                    id="refresh-btn" 
+                    class="btn btn-icon refresh-btn" 
+                    aria-label="Refresh match data"
+                    title="Refresh Data"
+                >
+                    <span aria-hidden="true">🔄</span>
+                </button>
+            </div>
+        </nav>
+        
+        <!-- Last Updated Info -->
+        <div class="last-updated" id="last-updated" aria-live="polite">
+            <span class="last-updated-text">Last updated: Never</span>
+        </div>
+    </header>
+    
+    <!-- Main Content Area -->
+    <main id="main-content" class="main-content" role="main">
+        <!-- Filter and Search Controls -->
+        <section class="controls-section" aria-label="Match filters and search">
+            <div class="container">
+                <!-- Search Input -->
+                <div class="search-container">
+                    <label for="search-input" class="search-label visually-hidden">Search teams or leagues</label>
+                    <input 
+                        type="text" 
+                        id="search-input" 
+                        class="search-input" 
+                        placeholder="Search teams or leagues..." 
+                        aria-describedby="search-help"
+                        autocomplete="off"
+                    >
+                    <div id="search-help" class="visually-hidden">
+                        Type to search for specific teams or leagues
+                    </div>
+                </div>
+                
+                <!-- League Filter Dropdown -->
+                <div class="filter-container">
+                    <label for="league-filter" class="filter-label">Filter by League:</label>
+                    <select id="league-filter" class="league-filter" aria-describedby="filter-help">
+                        <option value="">All Leagues</option>
+                        <!-- Options will be populated dynamically -->
+                    </select>
+                    <div id="filter-help" class="visually-hidden">
+                        Select a league to filter matches
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Loading Spinner -->
+        <div id="loading-spinner" class="loading-spinner" role="status" aria-label="Loading matches">
+            <div class="spinner" aria-hidden="true"></div>
+            <p class="loading-text">Loading today's matches...</p>
+        </div>
+        
+        <!-- Error Message Container -->
+        <div id="error-message" class="error-message" role="alert" aria-live="assertive" style="display: none;">
+            <div class="error-content">
+                <span class="error-icon" aria-hidden="true">⚠️</span>
+                <div class="error-text">
+                    <h3 class="error-title">Unable to load matches</h3>
+                    <p class="error-description" id="error-description">
+                        There was a problem fetching today's matches. Please check your internet connection and try again.
+                    </p>
+                </div>
+                <button id="retry-btn" class="btn btn-primary retry-btn" aria-label="Retry loading matches">
+                    Retry
+                </button>
+            </div>
+        </div>
+        
+        <!-- No Matches Message -->
+        <div id="no-matches" class="no-matches" style="display: none;">
+            <div class="no-matches-content">
+                <span class="no-matches-icon" aria-hidden="true">📅</span>
+                <h2 class="no-matches-title">No matches today</h2>
+                <p class="no-matches-description">
+                    There are no football matches scheduled for today, or no matches match your current filter criteria.
+                </p>
+            </div>
+        </div>
+        
+        <!-- Matches Container -->
+        <section class="matches-section" aria-label="Today's football matches">
+            <div class="container">
+                <!-- Matches Grid - populated dynamically -->
+                <div id="matches-container" class="matches-grid" role="region" aria-label="List of football matches">
+                    <!-- Match cards will be inserted here by JavaScript -->
+                </div>
+            </div>
+        </section>
+    </main>
+    
+    <!-- Footer Section -->
+    <footer class="footer" role="contentinfo">
+        <div class="container">
+            <div class="footer-content">
+                <!-- Copyright Information -->
+                <div class="footer-section">
+                    <p class="copyright">
+                        &copy; 2024 Football Results. All rights reserved.
+                    </p>
+                </div>
+                
+                <!-- Data Source Attribution -->
+                <div class="footer-section">
+                    <p class="data-source">
+                        Data provided by 
+                        <a href="https://www.thesportsdb.com" 
+                           target="_blank" 
+                           rel="noopener noreferrer"
+                           class="footer-link">
+                            TheSportsDB
+                        </a>
+                    </p>
+                </div>
+                
+                <!-- Additional Links -->
+                <div class="footer-section">
+                    <nav class="footer-nav" aria-label="Footer navigation">
+                        <a href="#" class="footer-link" aria-label="Privacy Policy">Privacy</a>
+                        <span class="footer-separator" aria-hidden="true">|</span>
+                        <a href="#" class="footer-link" aria-label="Terms of Service">Terms</a>
+                        <span class="footer-separator" aria-hidden="true">|</span>
+                        <a href="#" class="footer-link" aria-label="Contact Us">Contact</a>
+                    </nav>
+                </div>
+            </div>
+        </div>
+    </footer>
+    
+    <!-- Match Card Template (Hidden, used by JavaScript) -->
+    <template id="match-card-template">
+        <article class="match-card" role="article">
+            <!-- Match Header with League Info -->
+            <header class="match-header">
+                <div class="league-info">
+                    <img class="league-logo" src="" alt="" loading="lazy">
+                    <span class="league-name"></span>
+                </div>
+                <div class="match-status">
+                    <span class="status-badge"></span>
+                </div>
+            </header>
+            
+            <!-- Match Content -->
+            <div class="match-content">
+                <!-- Home Team -->
+                <div class="team home-team">
+                    <img class="team-logo" src="" alt="" loading="lazy">
+                    <span class="team-name"></span>
+                </div>
+                
+                <!-- Match Info (Score/Time) -->
+                <div class="match-info">
+                    <div class="score">
+                        <span class="home-score">-</span>
+                        <span class="score-separator">:</span>
+                        <span class="away-score">-</span>
+                    </div>
+                    <div class="match-time"></div>
+                </div>
+                
+                <!-- Away Team -->
+                <div class="team away-team">
+                    <img class="team-logo" src="" alt="" loading="lazy">
+                    <span class="team-name"></span>
+                </div>
+            </div>
+            
+            <!-- Match Footer -->
+            <footer class="match-footer">
+                <div class="match-details">
+                    <span class="venue"></span>
+                    <span class="match-date"></span>
+                </div>
+            </footer>
+        </article>
+    </template>
+    
+    <!-- JavaScript -->
+    <script src="script.js"></script>
+    
+    <!-- Service Worker Registration (Progressive Web App Support) -->
+    <script>
+        // Register service worker for offline functionality (future enhancement)
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                // Service worker implementation would go here
+                console.log('Service Worker support detected');
+            });
+        }
+    </script>
+</body>
+</html>
