@@ -32,31 +32,35 @@
 const CONFIG = {
     // API Configuration
     api: {
-        // Primary API: TheSportsDB (Free, no API key required)
+        // Primary API: Football-Data.org (Reliable, current data)
         primary: {
-            baseUrl: 'https://www.thesportsdb.com/api/v1/json/3',
-            endpoints: {
-                // Get all soccer events for today
-                todayMatches: '/eventsday.php',
-                // Get league details
-                league: '/lookupleague.php',
-                // Get team details
-                team: '/lookupteam.php'
-            },
-            rateLimit: 1000 // Minimum milliseconds between requests
-        },
-        
-        // Fallback API: Football-data.org (Requires API key)
-        fallback: {
             baseUrl: 'https://api.football-data.org/v4',
             endpoints: {
+                // Get today's matches
                 todayMatches: '/matches',
-                competitions: '/competitions'
+                // Get competitions/leagues
+                competitions: '/competitions',
+                // Get team details
+                teams: '/teams'
             },
             headers: {
-                'X-Auth-Token': 'YOUR_API_KEY_HERE' // Replace with actual API key
+                'X-Auth-Token': 'c5fd509e320048a8b6ac36e4450b3417'
             },
-            rateLimit: 2000
+            rateLimit: 6000 // 10 requests per minute = 6000ms between requests
+        },
+        
+        // Fallback API: API-Football (RapidAPI)
+        fallback: {
+            baseUrl: 'https://v3.football.api-sports.io',
+            endpoints: {
+                todayMatches: '/fixtures',
+                competitions: '/leagues'
+            },
+            headers: {
+                'X-RapidAPI-Key': '', // User can add their own key
+                'X-RapidAPI-Host': 'v3.football.api-sports.io'
+            },
+            rateLimit: 3000
         }
     },
     
@@ -275,7 +279,11 @@ function sanitizeString(str) {
 function getFallbackImage(type, name) {
     const encodedName = encodeURIComponent(name || 'Unknown');
     const size = type === 'team' ? '64x64' : '32x32';
-    return `https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/e44e441c-8da7-40a3-a0e9-36744df4d801.png}?text=${encodedName}`;
+    const backgroundColor = type === 'team' ? '1a1a1a' : '2d2d2d';
+    const textColor = 'ffffff';
+    
+    // Use placehold.co for consistent placeholder images
+    return `https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/6ff310d5-09f5-4f1c-af47-2de7b193f156.png}/${backgroundColor}/${textColor}?text=${encodedName}`;
 }
 
 /**
@@ -536,7 +544,7 @@ async function makeRequest(url, options = {}) {
 }
 
 /**
- * Fetch today's matches from TheSportsDB API
+ * Fetch today's matches from Football-Data.org API
  * @returns {Promise<Array>} Array of match objects
  */
 async function fetchTodayMatches() {
@@ -544,79 +552,120 @@ async function fetchTodayMatches() {
         // Get today's date in YYYY-MM-DD format
         const today = new Date().toISOString().split('T')[0];
         
-        // Construct API URL
-        const url = `${CONFIG.api.primary.baseUrl}${CONFIG.api.primary.endpoints.todayMatches}?d=${today}&s=Soccer`;
+        // Construct API URL for today's matches
+        const url = `${CONFIG.api.primary.baseUrl}${CONFIG.api.primary.endpoints.todayMatches}?dateFrom=${today}&dateTo=${today}`;
         
-        console.log('Fetching matches from:', url);
+        console.log('Fetching matches from Football-Data.org:', url);
         
-        // Make API request
-        const data = await makeRequest(url);
+        // Make API request with authentication headers
+        const data = await makeRequest(url, {
+            headers: CONFIG.api.primary.headers
+        });
         
-        // Extract events from response
-        const events = data.events || [];
+        // Extract matches from response
+        const matches = data.matches || [];
         
         // Transform data to standardized format
-        const matches = events.map(event => ({
-            id: event.idEvent,
+        const transformedMatches = matches.map(match => ({
+            id: match.id,
             homeTeam: {
-                id: event.idHomeTeam,
-                name: event.strHomeTeam,
-                logo: event.strHomeTeamBadge || getFallbackImage('team', event.strHomeTeam)
+                id: match.homeTeam.id,
+                name: match.homeTeam.name,
+                logo: match.homeTeam.crest || getFallbackImage('team', match.homeTeam.name)
             },
             awayTeam: {
-                id: event.idAwayTeam,
-                name: event.strAwayTeam,
-                logo: event.strAwayTeamBadge || getFallbackImage('team', event.strAwayTeam)
+                id: match.awayTeam.id,
+                name: match.awayTeam.name,
+                logo: match.awayTeam.crest || getFallbackImage('team', match.awayTeam.name)
             },
             league: {
-                id: event.idLeague,
-                name: event.strLeague,
-                logo: event.strLeagueBadge || getFallbackImage('league', event.strLeague),
-                country: event.strCountry
+                id: match.competition.id,
+                name: match.competition.name,
+                logo: match.competition.emblem || getFallbackImage('league', match.competition.name),
+                country: match.area ? match.area.name : 'International'
             },
             score: {
-                home: event.intHomeScore || null,
-                away: event.intAwayScore || null
+                home: match.score.fullTime.home,
+                away: match.score.fullTime.away
             },
-            status: determineMatchStatus(event),
-            time: event.strTime,
-            date: event.dateEvent,
-            venue: event.strVenue,
-            season: event.strSeason,
-            round: event.intRound
+            status: determineMatchStatusFromFootballData(match),
+            time: match.utcDate ? new Date(match.utcDate).toTimeString().split(' ')[0] : 'TBD',
+            date: match.utcDate ? match.utcDate.split('T')[0] : today,
+            venue: match.venue || 'TBD',
+            season: match.season ? match.season.startDate : null,
+            round: match.matchday || match.stage || 'Regular',
+            utcDate: match.utcDate,
+            lastUpdated: match.lastUpdated
         }));
         
-        console.log(`Fetched ${matches.length} matches`);
-        return matches;
+        console.log(`Fetched ${transformedMatches.length} matches from Football-Data.org`);
+        return transformedMatches;
         
     } catch (error) {
-        console.error('Error fetching matches:', error);
+        console.error('Error fetching matches from Football-Data.org:', error);
+        
+        // Try fallback API if available
+        if (error.status === 429) {
+            console.log('Rate limit exceeded, waiting before retry...');
+            throw new Error('Rate limit exceeded. Please wait before refreshing.');
+        }
+        
         throw error;
     }
 }
 
 /**
- * Determine match status from API response
+ * Determine match status from Football-Data.org API response
+ * @param {Object} match - Match object from Football-Data.org API
+ * @returns {string} Match status
+ */
+function determineMatchStatusFromFootballData(match) {
+    const status = match.status;
+    
+    // Map Football-Data.org statuses to our internal statuses
+    switch (status) {
+        case 'FINISHED':
+        case 'AWARDED':
+            return 'finished';
+            
+        case 'IN_PLAY':
+        case 'PAUSED':
+            return 'live';
+            
+        case 'TIMED':
+        case 'SCHEDULED':
+            return 'scheduled';
+            
+        case 'POSTPONED':
+        case 'CANCELLED':
+        case 'SUSPENDED':
+            return 'postponed';
+            
+        default:
+            return 'scheduled';
+    }
+}
+
+/**
+ * Legacy function for backward compatibility
  * @param {Object} event - Event object from API
  * @returns {string} Match status
  */
 function determineMatchStatus(event) {
-    // Check if match has finished
+    // For Football-Data.org format
+    if (event.status) {
+        return determineMatchStatusFromFootballData(event);
+    }
+    
+    // Legacy TheSportsDB format (kept for compatibility)
     if (event.strStatus === 'Match Finished' || 
         (event.intHomeScore !== null && event.intAwayScore !== null)) {
         return 'finished';
     }
     
-    // Check if match is live
     if (event.strStatus === 'Live' || event.strStatus === '1H' || 
         event.strStatus === '2H' || event.strStatus === 'HT') {
         return 'live';
-    }
-    
-    // Check if match is scheduled for today
-    const today = new Date().toISOString().split('T')[0];
-    if (event.dateEvent === today) {
-        return 'scheduled';
     }
     
     return 'scheduled';
@@ -1028,8 +1077,9 @@ function createMatchCard(match) {
 function getStatusText(status) {
     const statusMap = {
         'scheduled': 'Scheduled',
-        'live': 'Live',
-        'finished': 'Finished'
+        'live': 'LIVE',
+        'finished': 'Finished',
+        'postponed': 'Postponed'
     };
     
     return statusMap[status] || 'Unknown';
